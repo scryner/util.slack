@@ -21,16 +21,11 @@ func (bs Blocks) MarshalJSON() ([]byte, error) {
 	}
 
 	j := fmt.Sprintf(`{"blocks":[%s]}`, strings.Join(marshaledBlocks, ","))
-	fmt.Println("----------")
-	fmt.Println(j)
-	fmt.Println("----------")
 
 	return []byte(j), nil
 }
 
-func (bs Blocks) sendAble() bool {
-	return true
-}
+func (bs Blocks) sendAble() {}
 
 type Block interface{
 	json.Marshaler
