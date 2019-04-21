@@ -5,15 +5,15 @@ import (
 )
 
 type ButtonElement struct {
-	Text  Text
-	Value string
+	Text Text
+	URL  string
 }
 
 func (btn ButtonElement) MarshalJSON() ([]byte, error) {
 	m := map[string]interface{}{
-		"type":  "button",
-		"text":  btn.Text,
-		"value": btn.Value,
+		"type": "button",
+		"text": btn.Text,
+		"url":  btn.URL,
 	}
 
 	return json.Marshal(m)

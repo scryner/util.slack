@@ -88,7 +88,7 @@ func TestBlock(t *testing.T) {
 			Text:  PlainText{
 				Text:  "Press Me!",
 			},
-			Value: "press123",
+			URL: "press123",
 		},
 	})
 
