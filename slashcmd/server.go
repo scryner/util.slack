@@ -37,7 +37,7 @@ type Server struct {
 	listenPort    int
 	signingSecret string
 	logLevel      log.Lvl
-	handler       func(*Request) (msgfmt.Message, error)
+	handler       CommandHandler
 }
 
 type Request struct {
@@ -52,6 +52,10 @@ type Request struct {
 	TriggerID   string
 	UserID      string
 	UserName    string
+}
+
+type CommandHandler interface{
+	Handle(*Request) (msgfmt.Message, error)
 }
 
 type Option func(*Server) error
@@ -91,7 +95,7 @@ func LogLevel(level LogLvl) Option {
 	}
 }
 
-func Handler(handler func(*Request) (msgfmt.Message, error)) Option {
+func Handler(handler CommandHandler) Option {
 	return func(server *Server) error {
 		server.handler = handler
 
@@ -184,7 +188,7 @@ func (server *Server) StartServer() <-chan error {
 			}
 
 			if server.handler != nil {
-				msg, err := server.handler(request)
+				msg, err := server.handler.Handle(request)
 
 				if err != nil {
 					ctx.Logger().Errorf("failed to handle request: %v", err)
