@@ -1,4 +1,4 @@
-package slashcmd
+package server
 
 import "testing"
 

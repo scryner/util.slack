@@ -1,4 +1,4 @@
-package slack
+package api
 
 type Cache interface {
 	Set(key string, data interface{}) error
