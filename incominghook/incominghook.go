@@ -30,9 +30,9 @@ func RequestTimeout(timeout time.Duration) Option {
 	}
 }
 
-func NewNotifier(webhoolURL string, opts ...Option) (*Notifier, error) {
+func NewNotifier(webhookURL string, opts ...Option) (*Notifier, error) {
 	n := &Notifier{
-		webhookURL:    webhoolURL,
+		webhookURL:     webhookURL,
 		requestTimeout: DefaultRequestTimeout,
 	}
 

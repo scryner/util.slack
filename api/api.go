@@ -1,4 +1,4 @@
-package slack
+package api
 
 import (
 	"bytes"
@@ -65,7 +65,7 @@ func CacheCapacity(capacity int) Option {
 	}
 }
 
-func NewAPI(botAccessToken string, opts ...Option) (*API, error) {
+func New(botAccessToken string, opts ...Option) (*API, error) {
 	api := &API{
 		serverAddr:     defaultServerAddr,
 		botAccessToken: botAccessToken,
