@@ -2,6 +2,7 @@ package api
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -81,11 +82,15 @@ type postMessageResponse struct {
 	Timestamp string `json:"ts"`
 }
 
+var (
+	ErrUserNotFound = errors.New("failed to search user")
+)
+
 func (api *API) PostMessage(email string, msg *ChatMessage) (string, string, error) {
 	// find user
 	user, err := api.SearchUserByEmail(email)
 	if err != nil {
-		return "", "", fmt.Errorf("failed to search user '%s': %v", email, err)
+		return "", "", fmt.Errorf("%w '%s': %v", ErrUserNotFound, email, err)
 	}
 
 	// open DM channel
