@@ -5,13 +5,13 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/labstack/echo"
+	"github.com/labstack/echo/v4"
 
 	"github.com/scryner/util.slack/msgfmt"
 )
 
 type EventHandler interface {
-	HandleEvent(props map[string]interface{}) error
+	HandleEvent(ctx Context, props map[string]interface{}) error
 }
 
 type eventHandlerDef func() (string, EventHandler)
@@ -76,13 +76,13 @@ func EventSubscriptions(endpoint string, handlerDefs ...eventHandlerDef) handler
 			if !ok {
 				ctx.Logger().Errorf("can't dispatch event '%s': not registered event", typ)
 				return ctx.JSON(http.StatusOK, msgfmt.PlainText{
-					Text:         fmt.Sprintf("I don't know what I do when event '%s'", typ),
+					Text: fmt.Sprintf("I don't know what I do when event '%s'", typ),
 				})
 			}
 
 			// handle it
 			go func() {
-				if err = h.HandleEvent(props); err != nil {
+				if err = h.HandleEvent(ctx, props); err != nil {
 					ctx.Logger().Errorf("failed to handle request: %v", err)
 				}
 			}()

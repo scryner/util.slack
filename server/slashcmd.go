@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/labstack/echo"
+	"github.com/labstack/echo/v4"
 
 	"github.com/scryner/util.slack/msgfmt"
 )
@@ -25,7 +25,7 @@ type SlashCommandRequest struct {
 }
 
 type SlashCommandHandler interface {
-	HandleCommand(*SlashCommandRequest) (msgfmt.Message, error)
+	HandleCommand(Context, *SlashCommandRequest) (msgfmt.Message, error)
 }
 
 func SlashCommand(endpoint string, cmdHandler SlashCommandHandler) handler {
@@ -67,7 +67,7 @@ func SlashCommand(endpoint string, cmdHandler SlashCommandHandler) handler {
 				UserName:    formVals.Get("user_name"),
 			}
 
-			msg, err := cmdHandler.HandleCommand(request)
+			msg, err := cmdHandler.HandleCommand(ctx, request)
 
 			if err != nil {
 				ctx.Logger().Errorf("failed to handle request: %v", err)

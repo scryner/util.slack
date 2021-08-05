@@ -7,8 +7,8 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/labstack/echo"
-	"github.com/labstack/echo/middleware"
+	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 	"github.com/labstack/gommon/log"
 )
 
@@ -35,6 +35,7 @@ type Server struct {
 	signingSecret string
 	logLevel      log.Lvl
 	handlers      []handler
+	middlewares   []echo.MiddlewareFunc
 }
 
 type handler func() (string, echo.HandlerFunc)
@@ -84,6 +85,14 @@ func Handlers(handlers ...handler) Option {
 	}
 }
 
+func Middlewares(middlewares ...echo.MiddlewareFunc) Option {
+	return func(server *Server) error {
+		server.middlewares = middlewares
+
+		return nil
+	}
+}
+
 func (server *Server) StartServer() <-chan error {
 	// make error chan
 	errCh := make(chan error, 1)
@@ -127,6 +136,11 @@ func (server *Server) StartServer() <-chan error {
 				return next(ctx)
 			}
 		})
+
+		// register other middlewares
+		if len(server.middlewares) > 1 {
+			e.Use(server.middlewares...)
+		}
 
 		// register handlers
 		for _, h := range server.handlers {

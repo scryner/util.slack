@@ -1,13 +1,9 @@
 module github.com/scryner/util.slack
 
-go 1.13
+go 1.16
 
 require (
-	github.com/dgrijalva/jwt-go v3.2.0+incompatible // indirect
-	github.com/labstack/echo v3.3.10+incompatible
-	github.com/labstack/gommon v0.2.8
-	github.com/mattn/go-colorable v0.1.1 // indirect
-	github.com/mattn/go-isatty v0.0.7 // indirect
-	github.com/valyala/fasttemplate v1.0.1 // indirect
-	golang.org/x/crypto v0.0.0-20190418165655-df01cb2cc480 // indirect
+	github.com/labstack/echo/v4 v4.5.0
+	github.com/labstack/gommon v0.3.0
+	github.com/stretchr/testify v1.7.0 // indirect
 )
