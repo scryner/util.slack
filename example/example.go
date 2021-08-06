@@ -16,11 +16,26 @@ func main() {
 	accessToken := os.Getenv("ACCESS_TOKEN")     // bot token
 	signingSecret := os.Getenv("SIGNING_SECRET") // signing token
 
+	// make api handle
 	slack, err := api.New(accessToken)
 	if err != nil {
 		log.Fatal("failed to make api:", err)
 	}
 
+	// publish home view
+	err = slack.PublishHomeView("scryner@42dot.ai", []msgfmt.Block{
+		msgfmt.Section{
+			Text: msgfmt.PlainText{
+				Text: "My sweet home",
+			},
+		},
+	})
+
+	if err != nil {
+		log.Fatal("failed to update home:", err)
+	}
+
+	// create server
 	s, err := server.New(signingSecret, server.ListenPort(8080),
 		server.LogLevel(server.DEBUG),
 		server.Handlers(
@@ -58,6 +73,12 @@ func (h eventHandler) HandleEvent(ctx server.Context, cb *server.EventCallback) 
 	fmt.Println(string(b))
 
 	ev := cb.Event
+
+	// return if app_home_opened event
+	if ev["type"] == "app_home_opened" {
+		// pass
+		return nil
+	}
 
 	// check message where from; messages from bot are to be ignored
 	if _, ok := ev["bot_id"]; ok {

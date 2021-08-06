@@ -77,9 +77,9 @@ type ChatMessage struct {
 }
 
 type postMessageResponse struct {
-	OK        bool   `json:"ok"`
 	ChannelId string `json:"channel"`
 	Timestamp string `json:"ts"`
+	genericResponse
 }
 
 var (
@@ -117,7 +117,7 @@ func (api *API) PostMessage(email string, msg *ChatMessage) (string, string, err
 	// read response body
 	b, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return "", "", fmt.Errorf("failed to response body: %v", err)
+		return "", "", fmt.Errorf("failed to read response body: %v", err)
 	}
 
 	// unmarshal response
@@ -129,7 +129,7 @@ func (api *API) PostMessage(email string, msg *ChatMessage) (string, string, err
 	}
 
 	if !postMsgResp.OK {
-		return "", "", fmt.Errorf("failed to post message: resp = %s", string(b))
+		return "", "", fmt.Errorf("failed to post message: %s", postMsgResp.Error)
 	}
 
 	// return result
