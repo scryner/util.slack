@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -26,10 +25,10 @@ func main() {
 		server.LogLevel(server.DEBUG),
 		server.Handlers(
 			server.SlashCommand("/slash", cmdHandler{}),
-			server.EventSubscriptions("/event",
-				server.EventHandlerDef("event_callback", eventHandler{
-					slack: slack,
-				}))))
+			server.EventSubscriptions("/event", eventHandler{slack: slack}),
+			server.Interactivity("/interactivity", interactivityHandler{slack: slack}),
+		),
+	)
 
 	if err != nil {
 		log.Fatalf("failed to make server: %v", err)
@@ -54,16 +53,18 @@ type eventHandler struct {
 	slack *api.API
 }
 
-func (h eventHandler) HandleEvent(ctx server.Context, prop map[string]interface{}) error {
-	b, _ := json.MarshalIndent(prop, "", "  ")
+func (h eventHandler) HandleEvent(ctx server.Context, cb *server.EventCallback) error {
+	b, _ := json.MarshalIndent(cb, "", "  ")
 	fmt.Println(string(b))
 
-	ev, ok := prop["event"].(map[string]interface{})
-	if !ok {
-		return errors.New("event property not found")
-	}
+	ev := cb.Event
 
 	// check message where from; messages from bot are to be ignored
+	if _, ok := ev["bot_id"]; ok {
+		// pass
+		return nil
+	}
+
 	subType, _ := ev["subtype"].(string)
 	switch subType {
 	// ignore it
@@ -106,4 +107,24 @@ func (h eventHandler) HandleEvent(ctx server.Context, prop map[string]interface{
 	}
 
 	return nil
+}
+
+type interactivityHandler struct {
+	slack *api.API
+}
+
+func (h interactivityHandler) HandleBlockActions(ctx server.Context, blockActions *server.BlockActions) error {
+	panic("implement me")
+}
+
+func (h interactivityHandler) HandleMessageActions(ctx server.Context, messageActions *server.MessageActions) error {
+	panic("implement me")
+}
+
+func (h interactivityHandler) HandleViewClosed(ctx server.Context, viewClosed *server.ViewClosed) error {
+	panic("implement me")
+}
+
+func (h interactivityHandler) HandleViewSubmission(ctx server.Context, viewSubmission *server.ViewSubmission) error {
+	panic("implement me")
 }

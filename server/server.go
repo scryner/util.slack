@@ -100,6 +100,9 @@ func (server *Server) StartServer() <-chan error {
 	go func() {
 		// make echo
 		e := echo.New()
+		e.HideBanner = true
+		e.HidePort = true
+
 		e.Use(middleware.Logger())
 		e.Logger.SetLevel(server.logLevel)
 

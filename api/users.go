@@ -22,8 +22,9 @@ type User struct {
 }
 
 type userInfoResponse struct {
-	OK   bool `json:"ok"`
-	User User `json:"user"`
+	OK    bool   `json:"ok"`
+	User  User   `json:"user"`
+	Error string `json:"error"`
 }
 
 func (api *API) SearchUserByEmail(email string) (*User, error) {
@@ -115,6 +116,10 @@ func (api *API) GetUserInfo(id string) (*User, error) {
 	err = json.Unmarshal(body, &userInfoResp)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal result: %v", err)
+	}
+
+	if !userInfoResp.OK {
+		return nil, fmt.Errorf("api/users.info failed: %s", userInfoResp.Error)
 	}
 
 	user := userInfoResp.User

@@ -96,43 +96,27 @@ func New(botAccessToken string, opts ...Option) (*API, error) {
 }
 
 func (api *API) doHTTPGet(apiPath string, params url.Values) (*http.Response, error) {
-	// clone params
-	newParams := make(url.Values)
-
-	for key, val := range params {
-		newParams[key] = val
-	}
-
-	// adding bot access token
-	newParams.Set("token", api.botAccessToken)
-
-	u := fmt.Sprintf("%s/%s?%s", api.serverAddr, apiPath, newParams.Encode())
+	u := fmt.Sprintf("%s/%s?%s", api.serverAddr, apiPath, params.Encode())
 
 	req, err := http.NewRequest(http.MethodGet, u, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to make http request: %v", err)
 	}
 
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", api.botAccessToken))
+
 	return api.httpCli.Do(req)
 }
 
 func (api *API) doHTTPPost(apiPath string, params url.Values) (*http.Response, error) {
-	// clone params
-	newParams := make(url.Values)
-
-	for key, val := range params {
-		newParams[key] = val
-	}
-
-	// adding bot access token
-	newParams.Set("token", api.botAccessToken)
-
-	u := fmt.Sprintf("%s/%s?%s", api.serverAddr, apiPath, newParams.Encode())
+	u := fmt.Sprintf("%s/%s?%s", api.serverAddr, apiPath, params.Encode())
 
 	req, err := http.NewRequest(http.MethodPost, u, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to make http request: %v", err)
 	}
+
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", api.botAccessToken))
 
 	return api.httpCli.Do(req)
 }
