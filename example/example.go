@@ -43,7 +43,7 @@ func main() {
 
 type cmdHandler struct{}
 
-func (cmdHandler) HandleCommand(req *server.SlashCommandRequest) (msgfmt.Message, error) {
+func (cmdHandler) HandleCommand(ctx server.Context, req *server.SlashCommandRequest) (msgfmt.Message, error) {
 	return msgfmt.PlainText{
 		Text:  req.Text,
 		Emoji: false,
@@ -54,7 +54,7 @@ type eventHandler struct {
 	slack *api.API
 }
 
-func (h eventHandler) HandleEvent(prop map[string]interface{}) error {
+func (h eventHandler) HandleEvent(ctx server.Context, prop map[string]interface{}) error {
 	b, _ := json.MarshalIndent(prop, "", "  ")
 	fmt.Println(string(b))
 
