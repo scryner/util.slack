@@ -17,10 +17,10 @@ type View struct {
 	Submit          *msgfmt.PlainText `json:"submit,omitempty"`
 	PrivateMetadata string            `json:"private_metadata,omitempty"`
 	CallbackId      string            `json:"callback_id,omitempty"`
-	ClearOnClose    *bool              `json:"clear_on_close,omitempty"`
-	NotifyOnClose   *bool              `json:"notify_on_close,omitempty"`
+	ClearOnClose    *bool             `json:"clear_on_close,omitempty"`
+	NotifyOnClose   *bool             `json:"notify_on_close,omitempty"`
 	ExternalId      string            `json:"external_id,omitempty"`
-	SubmitDisabled  *bool              `json:"submit_disabled,omitempty"`
+	SubmitDisabled  *bool             `json:"submit_disabled,omitempty"`
 }
 
 type genericResponse struct {
@@ -28,9 +28,9 @@ type genericResponse struct {
 	Error string `json:"error"`
 }
 
-func (api *API) PublishHomeView(email string, blocks []msgfmt.Block) error {
-	return api.PublishView(email, &View{
-		Type:   "home",
+func (api *API) PublishHomeView(user *User, blocks []msgfmt.Block) error {
+	return api.PublishView(user, &View{
+		Type: "home",
 		Title: msgfmt.PlainText{
 			Text:  "Hello, world!",
 			Emoji: false,
@@ -44,13 +44,7 @@ type publishViewRequest struct {
 	View   *View  `json:"view"`
 }
 
-func (api *API) PublishView(email string, view *View) error {
-	// find user
-	user, err := api.SearchUserByEmail(email)
-	if err != nil {
-		return fmt.Errorf("%w '%s': %v", ErrUserNotFound, email, err)
-	}
-
+func (api *API) PublishView(user *User, view *View) error {
 	req := publishViewRequest{
 		UserId: user.ID,
 		View:   view,

@@ -22,8 +22,14 @@ func main() {
 		log.Fatal("failed to make api:", err)
 	}
 
+	// search user
+	user, err := slack.SearchUserByEmail("scryner@42dot.ai")
+	if err != nil {
+		log.Fatal("failed to find user:", err)
+	}
+
 	// publish home view
-	err = slack.PublishHomeView("scryner@42dot.ai", []msgfmt.Block{
+	err = slack.PublishHomeView(user, []msgfmt.Block{
 		msgfmt.Section{
 			Text: msgfmt.PlainText{
 				Text: "My sweet home",
