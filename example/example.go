@@ -107,7 +107,7 @@ func (h eventHandler) HandleEvent(ctx server.Context, cb *server.EventCallback) 
 	}
 
 	// post echo message
-	toBeDelChannel, toBeDelTs, err := h.slack.PostMessage(user.Profile.Email, &api.ChatMessage{
+	toBeDelChannel, toBeDelTs, err := h.slack.PostBotDirectMessage(user, &api.ChatMessage{
 		ChannelID:        channel,
 		NotificationText: "echo",
 		Blocks: []msgfmt.Block{msgfmt.Section{

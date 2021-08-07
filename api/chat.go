@@ -86,38 +86,42 @@ var (
 	ErrUserNotFound = errors.New("failed to search user")
 )
 
-func (api *API) PostMessage(email string, msg *ChatMessage) (string, string, error) {
-	// find user
-	user, err := api.SearchUserByEmail(email)
-	if err != nil {
-		return "", "", fmt.Errorf("%w '%s': %v", ErrUserNotFound, email, err)
-	}
-
+func (api *API) PostBotDirectMessage(user *User, msg *ChatMessage) (channelId, ts string, err error) {
 	// open DM channel
-	dmChannel, err := api.openDMChannel(user)
+	channelId, err = api.openDMChannel(user)
 	if err != nil {
 		return "", "", fmt.Errorf("failed to open DM channel for '%s': %v", user.Profile.Email, err)
 	}
 
-	msg.ChannelID = dmChannel
+	msg.ChannelID = channelId
 
+	// post message
+	ts, err = api.PostMessage(msg)
+	if err != nil {
+		return "", "", err
+	}
+
+	return
+}
+
+func (api *API) PostMessage(msg *ChatMessage) (string, error) {
 	// post message
 	resp, err := api.doHTTPPostJSON("api/chat.postMessage", nil, msg)
 	if err != nil {
-		return "", "", fmt.Errorf("failed to send request to post message: %v", err)
+		return "", fmt.Errorf("failed to send request to post message: %v", err)
 	}
 
 	defer resp.Body.Close()
 
 	// check result
 	if resp.StatusCode != http.StatusOK {
-		return "", "", fmt.Errorf("failed to post message: status = %s", resp.Status)
+		return "", fmt.Errorf("failed to post message: status = %s", resp.Status)
 	}
 
 	// read response body
 	b, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return "", "", fmt.Errorf("failed to read response body: %v", err)
+		return "", fmt.Errorf("failed to read response body: %v", err)
 	}
 
 	// unmarshal response
@@ -125,15 +129,15 @@ func (api *API) PostMessage(email string, msg *ChatMessage) (string, string, err
 
 	err = json.Unmarshal(b, &postMsgResp)
 	if err != nil {
-		return "", "", fmt.Errorf("failed to unmarshal response body: %v", err)
+		return "", fmt.Errorf("failed to unmarshal response body: %v", err)
 	}
 
 	if !postMsgResp.OK {
-		return "", "", fmt.Errorf("failed to post message: %s", postMsgResp.Error)
+		return "", fmt.Errorf("failed to post message: %s", postMsgResp.Error)
 	}
 
 	// return result
-	return postMsgResp.ChannelId, postMsgResp.Timestamp, nil
+	return postMsgResp.Timestamp, nil
 }
 
 type deleteMessageRequest struct {
