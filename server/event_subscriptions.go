@@ -30,13 +30,36 @@ type Authorization struct {
 	IsEnterpriseInstall bool   `json:"is_enterprise_install"`
 }
 
+type Event map[string]interface{}
+
+func (ev Event) Type() (typ, subType string, err error) {
+	// get type
+	iTyp, ok := ev["type"]
+	if !ok {
+		err = fmt.Errorf("type field is missing")
+		return
+	}
+
+	if typ, ok = iTyp.(string); !ok {
+		err = fmt.Errorf("invalid type field: %v, but string is needed", reflect.TypeOf(iTyp))
+		return
+	}
+
+	// get sub-type
+	if iSubTyp, ok := ev["subtype"]; ok {
+		subType, _ = iSubTyp.(string)
+	}
+
+	return
+}
+
 type EventCallback struct {
-	TeamId         string                 `json:"team_id"`
-	ApiAppId       string                 `json:"api_app_id"`
-	Event          map[string]interface{} `json:"event"`
-	Authorizations Authorizations         `json:"authorizations"`
-	EventContext   string                 `json:"event_context"`
-	EventTime      time.Time              `json:"event_time"`
+	TeamId         string         `json:"team_id"`
+	ApiAppId       string         `json:"api_app_id"`
+	Event          Event          `json:"event"`
+	Authorizations Authorizations `json:"authorizations"`
+	EventContext   string         `json:"event_context"`
+	EventTime      time.Time      `json:"event_time"`
 }
 
 func (cb *EventCallback) UnmarshalJSON(b []byte) error {

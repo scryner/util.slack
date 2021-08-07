@@ -74,60 +74,67 @@ func (h eventHandler) HandleEvent(ctx server.Context, cb *server.EventCallback) 
 
 	ev := cb.Event
 
-	// return if app_home_opened event
-	if ev["type"] == "app_home_opened" {
-		// pass
-		return nil
-	}
-
-	// check message where from; messages from bot are to be ignored
-	if _, ok := ev["bot_id"]; ok {
-		// pass
-		return nil
-	}
-
-	subType, _ := ev["subtype"].(string)
-	switch subType {
-	// ignore it
-	case "message_deleted":
-		fallthrough
-	case "bot_message":
-		return nil
-	}
-
-	channel, _ := ev["channel"].(string)
-	userId, _ := ev["user"].(string)
-	text, _ := ev["text"].(string)
-	//timestamp, _ := ev["ts"].(string)
-
-	// get user info
-	user, err := h.slack.GetUserInfo(userId)
+	// get type
+	typ, subType, err := ev.Type()
 	if err != nil {
 		return err
 	}
 
-	// post echo message
-	toBeDelChannel, toBeDelTs, err := h.slack.PostBotDirectMessage(user, &api.ChatMessage{
-		ChannelID:        channel,
-		NotificationText: "echo",
-		Blocks: []msgfmt.Block{msgfmt.Section{
-			Text: msgfmt.PlainText{
-				Text: text,
-			},
-		}},
-	})
+	switch typ {
+	case "app_home_opened":
+		return nil
+	case "message":
+		// check message where from; messages from bot are to be ignored
+		if _, ok := ev["bot_id"]; ok {
+			// pass
+			return nil
+		}
 
-	if err != nil {
-		return err
+		switch subType {
+		// ignore it
+		case "message_deleted":
+			fallthrough
+		case "bot_message":
+			return nil
+		}
+
+		channel, _ := ev["channel"].(string)
+		userId, _ := ev["user"].(string)
+		text, _ := ev["text"].(string)
+		//timestamp, _ := ev["ts"].(string)
+
+		// get user info
+		user, err := h.slack.GetUserInfo(userId)
+		if err != nil {
+			return err
+		}
+
+		// post echo message
+		toBeDelChannel, toBeDelTs, err := h.slack.PostBotDirectMessage(user, &api.ChatMessage{
+			ChannelID:        channel,
+			NotificationText: "echo",
+			Blocks: []msgfmt.Block{msgfmt.Section{
+				Text: msgfmt.PlainText{
+					Text: text,
+				},
+			}},
+		})
+
+		if err != nil {
+			return err
+		}
+
+		// delete message after 3 seconds
+		time.Sleep(time.Second * 3)
+		if err = h.slack.DeleteMessage(toBeDelChannel, toBeDelTs, false); err != nil {
+			return err
+		}
+
+		return nil
+
+	default:
+		return fmt.Errorf("unknown typ '%s'", typ)
 	}
-
-	// delete message after 3 seconds
-	time.Sleep(time.Second * 3)
-	if err = h.slack.DeleteMessage(toBeDelChannel, toBeDelTs, false); err != nil {
-		return err
-	}
-
-	return nil
 }
 
 type interactivityHandler struct {
