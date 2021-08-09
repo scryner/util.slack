@@ -71,9 +71,10 @@ func (api *API) openDMChannel(user *User) (string, error) {
 }
 
 type ChatMessage struct {
-	ChannelID        string         `json:"channel"`
-	NotificationText string         `json:"text"`
-	Blocks           []msgfmt.Block `json:"blocks"`
+	ChannelID   string              `json:"channel"`
+	Blocks      []msgfmt.Block      `json:"blocks,omitempty"`
+	Attachments []msgfmt.Attachment `json:"attachments,omitempty"`
+	ThreadTs    string              `json:"thread_ts,omitempty"`
 }
 
 type postMessageResponse struct {
