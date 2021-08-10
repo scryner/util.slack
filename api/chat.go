@@ -145,14 +145,12 @@ func (api *API) PostMessage(msg *ChatMessage) (string, error) {
 type deleteMessageRequest struct {
 	ChannelID string `json:"channel"`
 	Timestamp string `json:"ts"`
-	AsUser    bool   `json:"as_user"`
 }
 
-func (api *API) DeleteMessage(channelId, timestamp string, asUser bool) error {
+func (api *API) DeleteMessage(channelId, timestamp string) error {
 	resp, err := api.doHTTPPostJSON("api/chat.delete", nil, &deleteMessageRequest{
 		ChannelID: channelId,
 		Timestamp: timestamp,
-		AsUser:    asUser,
 	})
 	if err != nil {
 		return fmt.Errorf("failed to send request to delete message: %v", err)

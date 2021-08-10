@@ -118,7 +118,7 @@ func (h eventHandler) HandleEvent(ctx server.Context, cb *server.EventCallback) 
 		// post echo message
 		toBeDelChannel, toBeDelTs, err := h.slack.PostBotDirectMessage(user, &api.ChatMessage{
 			ChannelID:        channel,
-			NotificationText: "echo",
+			Text: text,
 			Blocks: []msgfmt.Block{msgfmt.Section{
 				Text: msgfmt.PlainText{
 					Text: text,
@@ -132,7 +132,7 @@ func (h eventHandler) HandleEvent(ctx server.Context, cb *server.EventCallback) 
 
 		// delete message after 3 seconds
 		time.Sleep(time.Second * 3)
-		if err = h.slack.DeleteMessage(toBeDelChannel, toBeDelTs, false); err != nil {
+		if err = h.slack.DeleteMessage(toBeDelChannel, toBeDelTs); err != nil {
 			return err
 		}
 
