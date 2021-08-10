@@ -104,7 +104,6 @@ func (h eventHandler) HandleEvent(ctx server.Context, cb *server.EventCallback) 
 			return nil
 		}
 
-		channel, _ := ev["channel"].(string)
 		userId, _ := ev["user"].(string)
 		text, _ := ev["text"].(string)
 		//timestamp, _ := ev["ts"].(string)
@@ -117,7 +116,6 @@ func (h eventHandler) HandleEvent(ctx server.Context, cb *server.EventCallback) 
 
 		// post echo message
 		toBeDelChannel, toBeDelTs, err := h.slack.PostBotDirectMessage(user, &api.ChatMessage{
-			ChannelID:        channel,
 			Text: text,
 			Blocks: []msgfmt.Block{msgfmt.Section{
 				Text: msgfmt.PlainText{

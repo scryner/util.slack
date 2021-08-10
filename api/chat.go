@@ -71,11 +71,15 @@ func (api *API) openDMChannel(user *User) (string, error) {
 }
 
 type ChatMessage struct {
-	ChannelID   string              `json:"channel"`
 	Text        string              `json:"text,omitempty"`
 	Blocks      []msgfmt.Block      `json:"blocks,omitempty"`
 	Attachments []msgfmt.Attachment `json:"attachments,omitempty"`
 	ThreadTs    string              `json:"thread_ts,omitempty"`
+}
+
+type postChatMessageRequest struct {
+	ChannelID string `json:"channel"`
+	*ChatMessage
 }
 
 type postMessageResponse struct {
@@ -95,10 +99,8 @@ func (api *API) PostBotDirectMessage(user *User, msg *ChatMessage) (channelId, t
 		return "", "", fmt.Errorf("failed to open DM channel for '%s': %v", user.Profile.Email, err)
 	}
 
-	msg.ChannelID = channelId
-
 	// post message
-	ts, err = api.PostMessage(msg)
+	ts, err = api.PostMessage(channelId, msg)
 	if err != nil {
 		return "", "", err
 	}
@@ -106,9 +108,13 @@ func (api *API) PostBotDirectMessage(user *User, msg *ChatMessage) (channelId, t
 	return
 }
 
-func (api *API) PostMessage(msg *ChatMessage) (string, error) {
+func (api *API) PostMessage(channelId string, msg *ChatMessage) (string, error) {
 	// post message
-	resp, err := api.doHTTPPostJSON("api/chat.postMessage", nil, msg)
+	resp, err := api.doHTTPPostJSON("api/chat.postMessage", nil, postChatMessageRequest{
+		ChannelID:   channelId,
+		ChatMessage: msg,
+	})
+
 	if err != nil {
 		return "", fmt.Errorf("failed to send request to post message: %v", err)
 	}
@@ -179,6 +185,51 @@ func (api *API) DeleteMessage(channelId, timestamp string) error {
 
 	if !genericResp.OK {
 		return fmt.Errorf("faild to delete message: %s", genericResp.Error)
+	}
+
+	return nil
+}
+
+type updateMessageRequest struct {
+	ChannelID string `json:"channel"`
+	Timestamp string `json:"ts"`
+	*ChatMessage
+}
+
+func (api *API) UpdateMessage(channelId, timestamp string, msg *ChatMessage) error {
+	resp, err := api.doHTTPPostJSON("api/chat.update", nil, updateMessageRequest{
+		ChannelID:   channelId,
+		Timestamp:   timestamp,
+		ChatMessage: msg,
+	})
+
+	if err != nil {
+		return fmt.Errorf("failed to send request to update message: %v", err)
+	}
+
+	defer resp.Body.Close()
+
+	// check result
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("failed to update message: status = %s", resp.Status)
+	}
+
+	// read response body
+	b, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return fmt.Errorf("failed to read response body: %v", err)
+	}
+
+	// unmarshal response
+	var genericResp genericResponse
+
+	err = json.Unmarshal(b, &genericResp)
+	if err != nil {
+		return fmt.Errorf("failed to unmarshal response body: %v", err)
+	}
+
+	if !genericResp.OK {
+		return fmt.Errorf("faild to update jmessage: %s", genericResp.Error)
 	}
 
 	return nil
