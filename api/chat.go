@@ -165,5 +165,23 @@ func (api *API) DeleteMessage(channelId, timestamp string, asUser bool) error {
 		return fmt.Errorf("failed to delete message: status = %s", resp.Status)
 	}
 
+	// read response body
+	b, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return fmt.Errorf("failed to read response body: %v", err)
+	}
+
+	// unmarshal response
+	var genericResp genericResponse
+
+	err = json.Unmarshal(b, &genericResp)
+	if err != nil {
+		return fmt.Errorf("failed to unmarshal response body: %v", err)
+	}
+
+	if !genericResp.OK {
+		return fmt.Errorf("faild to delete message: %s", genericResp.Error)
+	}
+
 	return nil
 }
