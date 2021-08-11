@@ -5,8 +5,8 @@ import (
 )
 
 type Section struct {
-	Text Text
-	Accessory Element
+	Text      Text
+	Accessory SectionAccessory
 }
 
 func (s Section) MarshalJSON() ([]byte, error) {
@@ -23,3 +23,8 @@ func (s Section) MarshalJSON() ([]byte, error) {
 }
 
 func (Section) blockAble() {}
+
+type SectionAccessory interface {
+	json.Marshaler
+	sectionAccessoryAble()
+}

@@ -38,4 +38,4 @@ func (img ImageElement) MarshalJSON() ([]byte, error) {
 	return json.Marshal(m)
 }
 
-func (ImageElement) elementAble() {}
+func (ImageElement) sectionAccessoryAble() {}

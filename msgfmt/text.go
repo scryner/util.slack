@@ -4,20 +4,20 @@ import (
 	"encoding/json"
 )
 
-type Text interface{
+type Text interface {
 	text() string
 	Message
 }
 
 type PlainText struct {
-	Text string
+	Text  string
 	Emoji bool
 }
 
 func (t PlainText) MarshalJSON() ([]byte, error) {
 	m := map[string]interface{}{
-		"type": "plain_text",
-		"text": t.Text,
+		"type":  "plain_text",
+		"text":  t.Text,
 		"emoji": t.Emoji,
 	}
 
@@ -28,8 +28,8 @@ func (t PlainText) text() string {
 	return t.Text
 }
 
-func (t PlainText) sendAble() {}
-func (t PlainText) elementAble() {}
+func (t PlainText) sendAble()             {}
+func (t PlainText) sectionAccessoryAble() {}
 
 type MarkdownText struct {
 	Text string
@@ -48,5 +48,5 @@ func (t MarkdownText) MarshalJSON() ([]byte, error) {
 	return json.Marshal(m)
 }
 
-func (t MarkdownText) sendAble() {}
-func (t MarkdownText) elementAble() {}
+func (t MarkdownText) sendAble()             {}
+func (t MarkdownText) sectionAccessoryAble() {}

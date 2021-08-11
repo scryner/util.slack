@@ -42,12 +42,17 @@ func main() {
 	}
 
 	// create server
+	h := handler{
+		slack: slack,
+		views: make(map[string]*viewContext),
+	}
+
 	s, err := server.New(signingSecret, server.ListenPort(8080),
 		server.LogLevel(server.DEBUG),
 		server.Handlers(
-			server.SlashCommand("/slash", cmdHandler{slack: slack}),
-			server.EventSubscriptions("/event", eventHandler{slack: slack}),
-			server.Interactivity("/interactivity", interactivityHandler{slack: slack}),
+			server.SlashCommand("/slash", h),
+			server.EventSubscriptions("/event", h),
+			server.Interactivity("/interactivity", h),
 		),
 	)
 
@@ -61,15 +66,22 @@ func main() {
 	log.Fatal("failure at server:", err)
 }
 
-type cmdHandler struct {
-	slack *api.API
+type viewContext struct {
+	viewId  string
+	userId  string
+	channel string
 }
 
-func (h cmdHandler) HandleCommand(ctx server.Context, req *server.SlashCommandRequest) (msgfmt.Message, error) {
+type handler struct {
+	slack *api.API
+	views map[string]*viewContext
+}
+
+func (h handler) HandleCommand(ctx server.Context, req *server.SlashCommandRequest) (msgfmt.Message, error) {
 	t := true
 
 	// open modal view
-	err := h.slack.OpenView(req.TriggerID, &api.View{
+	viewId, err := h.slack.OpenView(req.TriggerId, &api.View{
 		Type: "modal",
 		Title: msgfmt.PlainText{
 			Text:  fmt.Sprintf("Handle '%s' :+1:", req.Text),
@@ -81,9 +93,30 @@ func (h cmdHandler) HandleCommand(ctx server.Context, req *server.SlashCommandRe
 					Text: "Hello modal world!",
 				},
 			},
+			msgfmt.Input{
+				Label: msgfmt.PlainText{
+					Text: "Title:",
+				},
+				Element: msgfmt.PlainTextInput{
+					ActionId: "input_title",
+				},
+			},
+			msgfmt.Input{
+				Label: msgfmt.PlainText{
+					Text: "Content:",
+				},
+				Element: msgfmt.PlainTextInput{
+					Multiline: true,
+					ActionId:  "input_content",
+				},
+			},
 		},
 		Close: &msgfmt.PlainText{
 			Text: "Goodbye",
+		},
+		Submit: &msgfmt.PlainText{
+			Text:  "Submit! :heart:",
+			Emoji: true,
 		},
 		NotifyOnClose: &t,
 	})
@@ -92,17 +125,19 @@ func (h cmdHandler) HandleCommand(ctx server.Context, req *server.SlashCommandRe
 		return nil, err
 	}
 
+	h.views[viewId] = &viewContext{
+		viewId:  viewId,
+		userId:  req.UserId,
+		channel: req.ChannelId,
+	}
+
 	return msgfmt.PlainText{
 		Text:  req.Text,
 		Emoji: false,
 	}, nil
 }
 
-type eventHandler struct {
-	slack *api.API
-}
-
-func (h eventHandler) HandleEvent(ctx server.Context, cb *server.EventCallback) error {
+func (h handler) HandleEvent(ctx server.Context, cb *server.EventCallback) error {
 	b, _ := json.MarshalIndent(cb, "", "  ")
 	fmt.Println(string(b))
 
@@ -169,22 +204,45 @@ func (h eventHandler) HandleEvent(ctx server.Context, cb *server.EventCallback) 
 	}
 }
 
-type interactivityHandler struct {
-	slack *api.API
-}
-
-func (h interactivityHandler) HandleBlockActions(ctx server.Context, blockActions *server.BlockActions) error {
+func (h handler) HandleBlockActions(ctx server.Context, blockActions *server.BlockActions) error {
 	panic("implement me")
 }
 
-func (h interactivityHandler) HandleMessageActions(ctx server.Context, messageActions *server.MessageActions) error {
+func (h handler) HandleMessageActions(ctx server.Context, messageActions *server.MessageActions) error {
 	panic("implement me")
 }
 
-func (h interactivityHandler) HandleViewClosed(ctx server.Context, viewClosed *server.ViewClosed) error {
-	panic("implement me")
+func (h handler) HandleViewClosed(ctx server.Context, viewClosed *server.ViewClosed) error {
+	b, _ := json.MarshalIndent(viewClosed, "", "  ")
+	fmt.Println(string(b))
+
+	return nil
 }
 
-func (h interactivityHandler) HandleViewSubmission(ctx server.Context, viewSubmission *server.ViewSubmission) error {
-	panic("implement me")
+func (h handler) HandleViewSubmission(ctx server.Context, viewSubmission *server.ViewSubmission) error {
+	viewId, _ := viewSubmission.View["id"].(string)
+	vctx, ok := h.views[viewId]
+	if !ok {
+		return fmt.Errorf("failed to get view '%s'", viewId)
+	}
+
+	title, _ := viewSubmission.State.GetValue("input_title")
+	content, _ := viewSubmission.State.GetValue("input_content")
+
+	msg := fmt.Sprintf("%s: %v", title, content)
+
+	if _, err := h.slack.PostMessage(vctx.channel, &api.ChatMessage{
+		Text: msg,
+		Blocks: []msgfmt.Block{
+			msgfmt.Section{
+				Text: msgfmt.MarkdownText{
+					Text: msg,
+				},
+			},
+		},
+	}); err != nil {
+		return err
+	}
+
+	return nil
 }

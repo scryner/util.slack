@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"reflect"
 
 	"github.com/scryner/util.slack/msgfmt"
 )
@@ -91,7 +92,12 @@ type openViewRequest struct {
 	View      *View  `json:"view"`
 }
 
-func (api *API) OpenView(triggerId string, view *View) error {
+type openViewResponse struct {
+	View map[string]interface{} `json:"view"`
+	genericResponse
+}
+
+func (api *API) OpenView(triggerId string, view *View) (viewId string, err error) {
 	req := openViewRequest{
 		TriggerId: triggerId,
 		View:      view,
@@ -101,34 +107,46 @@ func (api *API) OpenView(triggerId string, view *View) error {
 	resp, err := api.doHTTPPostJSON("api/views.open", nil, req)
 
 	if err != nil {
-		return fmt.Errorf("failed to send request to open view: %v", err)
+		return "", fmt.Errorf("failed to send request to open view: %v", err)
 	}
 
 	defer resp.Body.Close()
 
 	// check result
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("failed to open view: status = %s", resp.Status)
+		return "", fmt.Errorf("failed to open view: status = %s", resp.Status)
 	}
 
 	// read response body
 	b, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return fmt.Errorf("failed to response body: %v", err)
+		return "", fmt.Errorf("failed to response body: %v", err)
 	}
 
 	// unmarshal generic response
-	var gresp genericResponse
+	var vResp openViewResponse
 
-	err = json.Unmarshal(b, &gresp)
+	err = json.Unmarshal(b, &vResp)
 	if err != nil {
 		// never reached
-		return fmt.Errorf("failed to unmarshal response body: %v", err)
+		return "", fmt.Errorf("failed to unmarshal response body: %v", err)
 	}
 
-	if !gresp.OK {
-		return fmt.Errorf("failed to open view: %s", gresp.Error)
+	if !vResp.OK {
+		return "", fmt.Errorf("failed to open view: %s", vResp.Error)
 	}
 
-	return nil
+	// extract id
+	iId, ok := vResp.View["id"]
+	if !ok {
+		return "", fmt.Errorf("empty view id")
+	}
+
+	viewId, ok = iId.(string)
+	if !ok {
+		// never reached
+		return "", fmt.Errorf("invalid viewId type: %v", reflect.TypeOf(iId))
+	}
+
+	return
 }

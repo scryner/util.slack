@@ -27,12 +27,7 @@ func (bs Blocks) MarshalJSON() ([]byte, error) {
 
 func (bs Blocks) sendAble() {}
 
-type Block interface{
+type Block interface {
 	json.Marshaler
 	blockAble()
-}
-
-type Element interface {
-	json.Marshaler
-	elementAble()
 }

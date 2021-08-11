@@ -4,12 +4,12 @@ import (
 	"encoding/json"
 )
 
-type ButtonElement struct {
+type Button struct {
 	Text Text
 	URL  string
 }
 
-func (btn ButtonElement) MarshalJSON() ([]byte, error) {
+func (btn Button) MarshalJSON() ([]byte, error) {
 	m := map[string]interface{}{
 		"type": "button",
 		"text": btn.Text,
@@ -19,4 +19,4 @@ func (btn ButtonElement) MarshalJSON() ([]byte, error) {
 	return json.Marshal(m)
 }
 
-func (ButtonElement) elementAble() {}
+func (Button) sectionAccessoryAble() {}

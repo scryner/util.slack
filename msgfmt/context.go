@@ -5,12 +5,12 @@ import (
 )
 
 type Context struct {
-	Elements []Element
+	Elements []SectionAccessory
 }
 
 func (ctx Context) MarshalJSON() ([]byte, error) {
-	m := map[string]interface{} {
-		"type": "context",
+	m := map[string]interface{}{
+		"type":     "context",
 		"elements": ctx.Elements,
 	}
 

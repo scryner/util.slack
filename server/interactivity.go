@@ -2,7 +2,6 @@ package server
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"net/url"
 
@@ -110,12 +109,78 @@ type ResponseUrl struct {
 	ResponseUrl string `json:"response_url"`
 }
 
-type ViewSubmission struct {
+type viewSubmission struct {
 	Team         Team                   `json:"team"`
 	User         User                   `json:"user"`
 	View         map[string]interface{} `json:"view"`
 	Hash         string                 `json:"hash"`
 	ResponseUrls []ResponseUrl          `json:"response_urls"`
+}
+
+type ViewSubmission struct {
+	viewSubmission
+	State *ViewState
+}
+
+type viewValue struct {
+	Type  string `json:"type"`
+	Value string `json:"value"`
+}
+
+type ViewState struct {
+	Values map[string]map[string]viewValue `json:"values"`
+}
+
+func (vs *ViewState) GetValue(actionId string) (value string, ok bool) {
+	for _, blk := range vs.Values {
+		for k, v := range blk {
+			if k == actionId {
+				value = v.Value
+				ok = true
+			}
+		}
+	}
+
+	return
+}
+
+func (v *ViewSubmission) UnmarshalJSON(b []byte) error {
+	var (
+		concrete  viewSubmission
+		viewState *ViewState
+	)
+
+	// unmarshal from body itself
+	err := json.Unmarshal(b, &concrete)
+	if err != nil {
+		return err
+	}
+
+	// build state
+	if concrete.View != nil {
+		if state, ok := concrete.View["state"]; ok {
+			sb, err := json.Marshal(state)
+			if err != nil {
+				// never reached
+				return err
+			}
+
+			var vs ViewState
+			err = json.Unmarshal(sb, &vs)
+			if err != nil {
+				return err
+			}
+
+			viewState = &vs
+		}
+	}
+
+	*v = ViewSubmission{
+		viewSubmission: concrete,
+		State:          viewState,
+	}
+
+	return nil
 }
 
 type InteractivityHandler interface {
@@ -169,9 +234,6 @@ func Interactivity(endpoint string, handler InteractivityHandler) handler {
 					Text:         "I can't understand your request body",
 				})
 			}
-
-			b, _ := json.MarshalIndent(props, "", "  ")
-			fmt.Println(string(b))
 
 			// get event type
 			typ, ok := props["type"].(string)

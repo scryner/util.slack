@@ -11,16 +11,16 @@ import (
 )
 
 type SlashCommandRequest struct {
-	ChannelID   string
+	ChannelId   string
 	ChannelName string
 	Command     string
-	ResponseURL string
+	ResponseUrl string
 	TeamDomain  string
-	TeamID      string
+	TeamId      string
 	Text        string
 	Token       string
-	TriggerID   string
-	UserID      string
+	TriggerId   string
+	UserId      string
 	UserName    string
 }
 
@@ -54,16 +54,16 @@ func SlashCommand(endpoint string, cmdHandler SlashCommandHandler) handler {
 			}
 
 			request := &SlashCommandRequest{
-				ChannelID:   formVals.Get("channel_id"),
+				ChannelId:   formVals.Get("channel_id"),
 				ChannelName: formVals.Get("channel_name"),
 				Command:     formVals.Get("command"),
-				ResponseURL: formVals.Get("response_url"),
+				ResponseUrl: formVals.Get("response_url"),
 				TeamDomain:  formVals.Get("team_domain"),
-				TeamID:      formVals.Get("team_id"),
+				TeamId:      formVals.Get("team_id"),
 				Text:        formVals.Get("text"),
 				Token:       formVals.Get("token"),
-				TriggerID:   formVals.Get("trigger_id"),
-				UserID:      formVals.Get("user_id"),
+				TriggerId:   formVals.Get("trigger_id"),
+				UserId:      formVals.Get("user_id"),
 				UserName:    formVals.Get("user_name"),
 			}
 

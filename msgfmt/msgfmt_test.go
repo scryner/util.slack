@@ -37,13 +37,13 @@ func TestBlock(t *testing.T) {
 
 	// section
 	blocks = append(blocks, Section{
-		Text:      MarkdownText{
+		Text: MarkdownText{
 			Text: "This is a section",
 		},
 	})
 
 	// section with image
-	blocks = append(blocks, Section {
+	blocks = append(blocks, Section{
 		Text: MarkdownText{
 			Text: "this is a section with image",
 		},
@@ -55,7 +55,7 @@ func TestBlock(t *testing.T) {
 
 	// image
 	blocks = append(blocks, Image{
-		Title:   PlainText{
+		Title: PlainText{
 			Text:  "Example image",
 			Emoji: true,
 		},
@@ -65,7 +65,7 @@ func TestBlock(t *testing.T) {
 
 	// context
 	blocks = append(blocks, Context{
-		Elements: []Element{
+		Elements: []SectionAccessory{
 			MarkdownText{
 				Text: "this is a markdown element in context",
 			},
@@ -80,13 +80,13 @@ func TestBlock(t *testing.T) {
 	blocks = append(blocks, Divider())
 
 	// section with button
-	blocks = append(blocks, Section {
+	blocks = append(blocks, Section{
 		Text: MarkdownText{
 			Text: "this is a section with button",
 		},
-		Accessory: ButtonElement{
-			Text:  PlainText{
-				Text:  "Press Me!",
+		Accessory: Button{
+			Text: PlainText{
+				Text: "Press Me!",
 			},
 			URL: "press123",
 		},
