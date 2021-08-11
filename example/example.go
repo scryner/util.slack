@@ -45,7 +45,7 @@ func main() {
 	s, err := server.New(signingSecret, server.ListenPort(8080),
 		server.LogLevel(server.DEBUG),
 		server.Handlers(
-			server.SlashCommand("/slash", cmdHandler{}),
+			server.SlashCommand("/slash", cmdHandler{slack: slack}),
 			server.EventSubscriptions("/event", eventHandler{slack: slack}),
 			server.Interactivity("/interactivity", interactivityHandler{slack: slack}),
 		),
@@ -61,9 +61,37 @@ func main() {
 	log.Fatal("failure at server:", err)
 }
 
-type cmdHandler struct{}
+type cmdHandler struct {
+	slack *api.API
+}
 
-func (cmdHandler) HandleCommand(ctx server.Context, req *server.SlashCommandRequest) (msgfmt.Message, error) {
+func (h cmdHandler) HandleCommand(ctx server.Context, req *server.SlashCommandRequest) (msgfmt.Message, error) {
+	t := true
+
+	// open modal view
+	err := h.slack.OpenView(req.TriggerID, &api.View{
+		Type: "modal",
+		Title: msgfmt.PlainText{
+			Text:  fmt.Sprintf("Handle '%s' :+1:", req.Text),
+			Emoji: true,
+		},
+		Blocks: []msgfmt.Block{
+			msgfmt.Section{
+				Text: msgfmt.MarkdownText{
+					Text: "Hello modal world!",
+				},
+			},
+		},
+		Close: &msgfmt.PlainText{
+			Text: "Goodbye",
+		},
+		NotifyOnClose: &t,
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
 	return msgfmt.PlainText{
 		Text:  req.Text,
 		Emoji: false,

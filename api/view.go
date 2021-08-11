@@ -85,3 +85,50 @@ func (api *API) PublishView(user *User, view *View) error {
 
 	return nil
 }
+
+type openViewRequest struct {
+	TriggerId string `json:"trigger_id"`
+	View      *View  `json:"view"`
+}
+
+func (api *API) OpenView(triggerId string, view *View) error {
+	req := openViewRequest{
+		TriggerId: triggerId,
+		View:      view,
+	}
+
+	// do request
+	resp, err := api.doHTTPPostJSON("api/views.open", nil, req)
+
+	if err != nil {
+		return fmt.Errorf("failed to send request to open view: %v", err)
+	}
+
+	defer resp.Body.Close()
+
+	// check result
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("failed to open view: status = %s", resp.Status)
+	}
+
+	// read response body
+	b, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return fmt.Errorf("failed to response body: %v", err)
+	}
+
+	// unmarshal generic response
+	var gresp genericResponse
+
+	err = json.Unmarshal(b, &gresp)
+	if err != nil {
+		// never reached
+		return fmt.Errorf("failed to unmarshal response body: %v", err)
+	}
+
+	if !gresp.OK {
+		return fmt.Errorf("failed to open view: %s", gresp.Error)
+	}
+
+	return nil
+}

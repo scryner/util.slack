@@ -2,7 +2,9 @@ package server
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
+	"net/url"
 
 	"github.com/labstack/echo/v4"
 )
@@ -137,10 +139,29 @@ func Interactivity(endpoint string, handler InteractivityHandler) handler {
 				})
 			}
 
+			// get payload
+			formVals, err := url.ParseQuery(string(reqBody))
+			if err != nil {
+				ctx.Logger().Errorf("failed to read form param: %v", err)
+				return ctx.JSON(http.StatusBadRequest, slackError{
+					ResponseType: "ephemeral",
+					Text:         "I can't read your form params",
+				})
+			}
+
+			payload := []byte(formVals.Get("payload"))
+			if payload == nil {
+				ctx.Logger().Errorf("empty payload param")
+				return ctx.JSON(http.StatusBadRequest, slackError{
+					ResponseType: "ephemeral",
+					Text:         "I can't read your form params: empty",
+				})
+			}
+
 			// unmarshal to map
 			var props map[string]interface{}
 
-			err := json.Unmarshal(reqBody, &props)
+			err = json.Unmarshal(payload, &props)
 			if err != nil {
 				ctx.Logger().Errorf("failed to unmarshal request to json: %v", err)
 				return ctx.JSON(http.StatusBadRequest, slackError{
@@ -148,6 +169,10 @@ func Interactivity(endpoint string, handler InteractivityHandler) handler {
 					Text:         "I can't understand your request body",
 				})
 			}
+
+			b, _ := json.MarshalIndent(props, "", "  ")
+			fmt.Println(string(b))
+
 			// get event type
 			typ, ok := props["type"].(string)
 			if !ok || typ == "" {
@@ -167,7 +192,7 @@ func Interactivity(endpoint string, handler InteractivityHandler) handler {
 			case "block_actions":
 				// unmarshal payload
 				var blockActions BlockActions
-				if err := json.Unmarshal(reqBody, &blockActions); err != nil {
+				if err := json.Unmarshal(payload, &blockActions); err != nil {
 					ctx.Logger().Errorf("failed to unmarshal block actions to json: %v", err)
 					return ctx.JSON(http.StatusBadRequest, slackError{
 						ResponseType: "ephemeral",
@@ -188,7 +213,7 @@ func Interactivity(endpoint string, handler InteractivityHandler) handler {
 
 			case "message_actions":
 				var messageActions MessageActions
-				if err := json.Unmarshal(reqBody, &messageActions); err != nil {
+				if err := json.Unmarshal(payload, &messageActions); err != nil {
 					ctx.Logger().Errorf("failed to unmarshal message actions to json: %v", err)
 					return ctx.JSON(http.StatusBadRequest, slackError{
 						ResponseType: "ephemeral",
@@ -209,7 +234,7 @@ func Interactivity(endpoint string, handler InteractivityHandler) handler {
 
 			case "view_closed":
 				var viewClosed ViewClosed
-				if err := json.Unmarshal(reqBody, &viewClosed); err != nil {
+				if err := json.Unmarshal(payload, &viewClosed); err != nil {
 					ctx.Logger().Errorf("failed to unmarshal view closed to json: %v", err)
 					return ctx.JSON(http.StatusBadRequest, slackError{
 						ResponseType: "ephemeral",
@@ -230,7 +255,7 @@ func Interactivity(endpoint string, handler InteractivityHandler) handler {
 
 			case "view_submission":
 				var viewSubmission ViewSubmission
-				if err := json.Unmarshal(reqBody, &viewSubmission); err != nil {
+				if err := json.Unmarshal(payload, &viewSubmission); err != nil {
 					ctx.Logger().Errorf("failed to unmarshal view submission to json: %v", err)
 					return ctx.JSON(http.StatusBadRequest, slackError{
 						ResponseType: "ephemeral",
