@@ -229,7 +229,7 @@ func (api *API) UpdateMessage(channelId, timestamp string, msg *ChatMessage) err
 	}
 
 	if !genericResp.OK {
-		return fmt.Errorf("faild to update jmessage: %s", genericResp.Error)
+		return fmt.Errorf("faild to update message: %s", genericResp.Error)
 	}
 
 	return nil
