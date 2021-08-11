@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/scryner/util.slack/api"
-	"github.com/scryner/util.slack/msgfmt"
+	"github.com/scryner/util.slack/block"
 	"github.com/scryner/util.slack/server"
 )
 
@@ -29,9 +29,9 @@ func main() {
 	}
 
 	// publish home view
-	err = slack.PublishHomeView(user, []msgfmt.Block{
-		msgfmt.Section{
-			Text: msgfmt.PlainText{
+	err = slack.PublishHomeView(user, []block.Block{
+		block.Section{
+			Text: block.PlainText{
 				Text: "My sweet home",
 			},
 		},
@@ -77,44 +77,44 @@ type handler struct {
 	views map[string]*viewContext
 }
 
-func (h handler) HandleCommand(ctx server.Context, req *server.SlashCommandRequest) (msgfmt.Message, error) {
+func (h handler) HandleCommand(ctx server.Context, req *server.SlashCommandRequest) (block.Message, error) {
 	t := true
 
 	// open modal view
 	viewId, err := h.slack.OpenView(req.TriggerId, &api.View{
 		Type: "modal",
-		Title: msgfmt.PlainText{
+		Title: block.PlainText{
 			Text:  fmt.Sprintf("Handle '%s' :+1:", req.Text),
 			Emoji: true,
 		},
-		Blocks: []msgfmt.Block{
-			msgfmt.Section{
-				Text: msgfmt.MarkdownText{
+		Blocks: []block.Block{
+			block.Section{
+				Text: block.MarkdownText{
 					Text: "Hello modal world!",
 				},
 			},
-			msgfmt.Input{
-				Label: msgfmt.PlainText{
+			block.Input{
+				Label: block.PlainText{
 					Text: "Title:",
 				},
-				Element: msgfmt.PlainTextInput{
+				Element: block.PlainTextInput{
 					ActionId: "input_title",
 				},
 			},
-			msgfmt.Input{
-				Label: msgfmt.PlainText{
+			block.Input{
+				Label: block.PlainText{
 					Text: "Content:",
 				},
-				Element: msgfmt.PlainTextInput{
+				Element: block.PlainTextInput{
 					Multiline: true,
 					ActionId:  "input_content",
 				},
 			},
 		},
-		Close: &msgfmt.PlainText{
+		Close: &block.PlainText{
 			Text: "Goodbye",
 		},
-		Submit: &msgfmt.PlainText{
+		Submit: &block.PlainText{
 			Text:  "Submit! :heart:",
 			Emoji: true,
 		},
@@ -131,7 +131,7 @@ func (h handler) HandleCommand(ctx server.Context, req *server.SlashCommandReque
 		channel: req.ChannelId,
 	}
 
-	return msgfmt.PlainText{
+	return block.PlainText{
 		Text:  req.Text,
 		Emoji: false,
 	}, nil
@@ -180,8 +180,8 @@ func (h handler) HandleEvent(ctx server.Context, cb *server.EventCallback) error
 		// post echo message
 		toBeDelChannel, toBeDelTs, err := h.slack.PostBotDirectMessage(user, &api.ChatMessage{
 			Text: text,
-			Blocks: []msgfmt.Block{msgfmt.Section{
-				Text: msgfmt.PlainText{
+			Blocks: []block.Block{block.Section{
+				Text: block.PlainText{
 					Text: text,
 				},
 			}},
@@ -233,9 +233,9 @@ func (h handler) HandleViewSubmission(ctx server.Context, viewSubmission *server
 
 	if _, err := h.slack.PostMessage(vctx.channel, &api.ChatMessage{
 		Text: msg,
-		Blocks: []msgfmt.Block{
-			msgfmt.Section{
-				Text: msgfmt.MarkdownText{
+		Blocks: []block.Block{
+			block.Section{
+				Text: block.MarkdownText{
 					Text: msg,
 				},
 			},

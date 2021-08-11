@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/scryner/util.slack/msgfmt"
+	"github.com/scryner/util.slack/block"
 )
 
 const (
@@ -47,7 +47,7 @@ func NewNotifier(webhookURL string, opts ...Option) (*Notifier, error) {
 	return n, nil
 }
 
-func (notifier *Notifier) Notify(message msgfmt.Message) error {
+func (notifier *Notifier) Notify(message block.Message) error {
 	// marshal message
 	b, err := json.Marshal(message)
 	if err != nil {

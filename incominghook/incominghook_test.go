@@ -4,7 +4,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/scryner/util.slack/msgfmt"
+	"github.com/scryner/util.slack/block"
 )
 
 func TestNotifier(t *testing.T) {
@@ -18,7 +18,7 @@ func TestNotifier(t *testing.T) {
 	}
 
 	// notify a message
-	err = notifier.Notify(msgfmt.PlainText{
+	err = notifier.Notify(block.PlainText{
 		Text:  "Wake up! You're only hope.",
 	})
 

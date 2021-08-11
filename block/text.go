@@ -1,4 +1,4 @@
-package msgfmt
+package block
 
 import (
 	"encoding/json"
@@ -15,21 +15,20 @@ type PlainText struct {
 }
 
 func (t PlainText) MarshalJSON() ([]byte, error) {
-	m := map[string]interface{}{
+	return json.Marshal(map[string]interface{}{
 		"type":  "plain_text",
 		"text":  t.Text,
 		"emoji": t.Emoji,
-	}
-
-	return json.Marshal(m)
+	})
 }
 
 func (t PlainText) text() string {
 	return t.Text
 }
 
-func (t PlainText) sendAble()             {}
-func (t PlainText) sectionAccessoryAble() {}
+func (PlainText) sendAble()             {}
+func (PlainText) sectionAccessoryAble() {}
+func (PlainText) contextElementAble()   {}
 
 type MarkdownText struct {
 	Text string
@@ -40,13 +39,12 @@ func (t MarkdownText) text() string {
 }
 
 func (t MarkdownText) MarshalJSON() ([]byte, error) {
-	m := map[string]interface{}{
+	return json.Marshal(map[string]interface{}{
 		"type": "mrkdwn",
 		"text": t.Text,
-	}
-
-	return json.Marshal(m)
+	})
 }
 
-func (t MarkdownText) sendAble()             {}
-func (t MarkdownText) sectionAccessoryAble() {}
+func (MarkdownText) sendAble()             {}
+func (MarkdownText) sectionAccessoryAble() {}
+func (MarkdownText) contextElementAble()   {}

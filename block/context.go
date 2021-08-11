@@ -1,11 +1,11 @@
-package msgfmt
+package block
 
 import (
 	"encoding/json"
 )
 
 type Context struct {
-	Elements []SectionAccessory
+	Elements []ContextElement
 }
 
 func (ctx Context) MarshalJSON() ([]byte, error) {
@@ -18,3 +18,8 @@ func (ctx Context) MarshalJSON() ([]byte, error) {
 }
 
 func (Context) blockAble() {}
+
+type ContextElement interface {
+	json.Marshaler
+	contextElementAble()
+}

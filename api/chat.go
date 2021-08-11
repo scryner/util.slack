@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/scryner/util.slack/msgfmt"
+	"github.com/scryner/util.slack/block"
 )
 
 type openDMChannelResponse struct {
@@ -71,10 +71,10 @@ func (api *API) openDMChannel(user *User) (string, error) {
 }
 
 type ChatMessage struct {
-	Text        string              `json:"text,omitempty"`
-	Blocks      []msgfmt.Block      `json:"blocks,omitempty"`
-	Attachments []msgfmt.Attachment `json:"attachments,omitempty"`
-	ThreadTs    string              `json:"thread_ts,omitempty"`
+	Text        string             `json:"text,omitempty"`
+	Blocks      []block.Block      `json:"blocks,omitempty"`
+	Attachments []block.Attachment `json:"attachments,omitempty"`
+	ThreadTs    string             `json:"thread_ts,omitempty"`
 }
 
 type postChatMessageRequest struct {

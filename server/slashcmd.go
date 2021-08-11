@@ -7,7 +7,7 @@ import (
 
 	"github.com/labstack/echo/v4"
 
-	"github.com/scryner/util.slack/msgfmt"
+	"github.com/scryner/util.slack/block"
 )
 
 type SlashCommandRequest struct {
@@ -25,7 +25,7 @@ type SlashCommandRequest struct {
 }
 
 type SlashCommandHandler interface {
-	HandleCommand(Context, *SlashCommandRequest) (msgfmt.Message, error)
+	HandleCommand(Context, *SlashCommandRequest) (block.Message, error)
 }
 
 func SlashCommand(endpoint string, cmdHandler SlashCommandHandler) handler {

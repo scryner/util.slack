@@ -7,16 +7,16 @@ import (
 	"net/http"
 	"reflect"
 
-	"github.com/scryner/util.slack/msgfmt"
+	"github.com/scryner/util.slack/block"
 )
 
 type View struct {
-	Type            string            `json:"type"`
-	Title           msgfmt.PlainText  `json:"title"`
-	Blocks          []msgfmt.Block    `json:"blocks"`
-	Close           *msgfmt.PlainText `json:"close,omitempty"`
-	Submit          *msgfmt.PlainText `json:"submit,omitempty"`
-	PrivateMetadata string            `json:"private_metadata,omitempty"`
+	Type            string           `json:"type"`
+	Title           block.PlainText  `json:"title"`
+	Blocks          []block.Block    `json:"blocks"`
+	Close           *block.PlainText `json:"close,omitempty"`
+	Submit          *block.PlainText `json:"submit,omitempty"`
+	PrivateMetadata string           `json:"private_metadata,omitempty"`
 	CallbackId      string            `json:"callback_id,omitempty"`
 	ClearOnClose    *bool             `json:"clear_on_close,omitempty"`
 	NotifyOnClose   *bool             `json:"notify_on_close,omitempty"`
@@ -29,10 +29,10 @@ type genericResponse struct {
 	Error string `json:"error"`
 }
 
-func (api *API) PublishHomeView(user *User, blocks []msgfmt.Block) error {
+func (api *API) PublishHomeView(user *User, blocks []block.Block) error {
 	return api.PublishView(user, &View{
 		Type: "home",
-		Title: msgfmt.PlainText{
+		Title: block.PlainText{
 			Text:  "Hello, world!",
 			Emoji: false,
 		},

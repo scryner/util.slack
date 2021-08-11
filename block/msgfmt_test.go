@@ -1,4 +1,4 @@
-package msgfmt
+package block
 
 import (
 	"encoding/json"
@@ -47,30 +47,30 @@ func TestBlock(t *testing.T) {
 		Text: MarkdownText{
 			Text: "this is a section with image",
 		},
-		Accessory: ImageElement{
-			ImageURL: "https://api.slack.com/img/blocks/bkb_template_images/palmtree.png",
+		Accessory: Image{
+			ImageUrl: "https://api.slack.com/img/blocks/bkb_template_images/palmtree.png",
 			AltText:  "palm tree",
 		},
 	})
 
 	// image
-	blocks = append(blocks, Image{
+	blocks = append(blocks, ImageWithTitle{
 		Title: PlainText{
 			Text:  "Example image",
 			Emoji: true,
 		},
-		ImageURL: "https://api.slack.com/img/blocks/bkb_template_images/goldengate.png",
+		ImageUrl: "https://api.slack.com/img/blocks/bkb_template_images/goldengate.png",
 		AltText:  "Example Image",
 	})
 
 	// context
 	blocks = append(blocks, Context{
-		Elements: []SectionAccessory{
+		Elements: []ContextElement{
 			MarkdownText{
 				Text: "this is a markdown element in context",
 			},
-			ImageElement{
-				ImageURL: "https://api.slack.com/img/blocks/bkb_template_images/palmtree.png",
+			Image{
+				ImageUrl: "https://api.slack.com/img/blocks/bkb_template_images/palmtree.png",
 				AltText:  "palm tree",
 			},
 		},
@@ -88,7 +88,8 @@ func TestBlock(t *testing.T) {
 			Text: PlainText{
 				Text: "Press Me!",
 			},
-			URL: "press123",
+			Value: "press123",
+			ActionId: "press_me",
 		},
 	})
 

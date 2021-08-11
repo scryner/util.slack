@@ -1,4 +1,4 @@
-package msgfmt
+package block
 
 type divider struct {}
 
