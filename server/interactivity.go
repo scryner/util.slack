@@ -162,17 +162,16 @@ type ViewState struct {
 	Values map[string]map[string]viewValue `json:"values"`
 }
 
-func (vs *ViewState) GetValue(actionId string) (value string, ok bool) {
+func (vs *ViewState) GetValue(actionId string) string {
 	for _, blk := range vs.Values {
 		for k, v := range blk {
 			if k == actionId {
-				value = v.Value
-				ok = true
+				return v.Value
 			}
 		}
 	}
 
-	return
+	return ""
 }
 
 func (v *ViewSubmission) UnmarshalJSON(b []byte) error {

@@ -214,8 +214,8 @@ func (h handler) HandleViewClosed(ctx server.Context, viewClosed *server.ViewClo
 
 func (h handler) HandleViewSubmission(ctx server.Context, viewSubmission *server.ViewSubmission) error {
 	channel := string(viewSubmission.View.GetPrivateMetadata())
-	title, _ := viewSubmission.State.GetValue("input_title")
-	content, _ := viewSubmission.State.GetValue("input_content")
+	title := viewSubmission.State.GetValue("input_title")
+	content := viewSubmission.State.GetValue("input_content")
 
 	msg := fmt.Sprintf("(%s) %s: %v", channel, title, content)
 	fmt.Println(msg)
