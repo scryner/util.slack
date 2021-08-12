@@ -1,11 +1,13 @@
 package server
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"net/http"
 	"net/url"
 
 	"github.com/labstack/echo/v4"
+	"github.com/scryner/util.slack/internal/crypto"
 )
 
 type User struct {
@@ -67,13 +69,15 @@ func safeToString(v interface{}) string {
 	return s
 }
 
+type View map[string]interface{}
+
 type BlockActions struct {
 	TriggerId   string                 `json:"trigger_id"`
 	ResponseUrl string                 `json:"response_url"`
 	User        User                   `json:"user"`
 	Team        Team                   `json:"team"`
 	Message     map[string]interface{} `json:"message"`
-	View        map[string]interface{} `json:"view"`
+	View        View                   `json:"view"`
 	Actions     []Action               `json:"actions"`
 	Hash        string                 `json:"hash"`
 }
@@ -96,10 +100,10 @@ type MessageActions struct {
 }
 
 type ViewClosed struct {
-	Team      Team                   `json:"team"`
-	User      User                   `json:"user"`
-	View      map[string]interface{} `json:"view"`
-	IsCleared bool                   `json:"is_cleared"`
+	Team      Team `json:"team"`
+	User      User `json:"user"`
+	View      View `json:"view"`
+	IsCleared bool `json:"is_cleared"`
 }
 
 type ResponseUrl struct {
@@ -110,16 +114,43 @@ type ResponseUrl struct {
 }
 
 type viewSubmission struct {
-	Team         Team                   `json:"team"`
-	User         User                   `json:"user"`
-	View         map[string]interface{} `json:"view"`
-	Hash         string                 `json:"hash"`
-	ResponseUrls []ResponseUrl          `json:"response_urls"`
+	Team         Team          `json:"team"`
+	User         User          `json:"user"`
+	View         View          `json:"view"`
+	Hash         string        `json:"hash"`
+	ResponseUrls []ResponseUrl `json:"response_urls"`
 }
 
 type ViewSubmission struct {
 	viewSubmission
 	State *ViewState
+}
+
+func (v View) Id() string {
+	return safeToString(v["id"])
+}
+
+func (v View) GetPrivateMetadata() []byte {
+	// extract view.private_metadata
+	data := safeToString(v["private_metadata"])
+
+	if data != "" {
+		// base64 decoding
+		ciphertext, err := base64.StdEncoding.DecodeString(data)
+		if err != nil {
+			return nil
+		}
+
+		// decrypt
+		decrypted, err := crypto.Decrypt([]byte(ciphertext))
+		if err != nil {
+			return nil
+		}
+
+		return decrypted
+	}
+
+	return nil
 }
 
 type viewValue struct {

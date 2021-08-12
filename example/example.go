@@ -44,7 +44,6 @@ func main() {
 	// create server
 	h := handler{
 		slack: slack,
-		views: make(map[string]*viewContext),
 	}
 
 	s, err := server.New(signingSecret, server.ListenPort(8080),
@@ -74,14 +73,13 @@ type viewContext struct {
 
 type handler struct {
 	slack *api.API
-	views map[string]*viewContext
 }
 
 func (h handler) HandleCommand(ctx server.Context, req *server.SlashCommandRequest) (block.Message, error) {
 	t := true
 
 	// open modal view
-	viewId, err := h.slack.OpenView(req.TriggerId, &api.View{
+	_, err := h.slack.OpenView(req.TriggerId, &api.View{
 		Type: "modal",
 		Title: block.PlainText{
 			Text:  fmt.Sprintf("Handle '%s' :+1:", req.Text),
@@ -118,17 +116,12 @@ func (h handler) HandleCommand(ctx server.Context, req *server.SlashCommandReque
 			Text:  "Submit! :heart:",
 			Emoji: true,
 		},
-		NotifyOnClose: &t,
+		NotifyOnClose:   &t,
+		PrivateMetadata: []byte(req.ChannelId),
 	})
 
 	if err != nil {
 		return nil, err
-	}
-
-	h.views[viewId] = &viewContext{
-		viewId:  viewId,
-		userId:  req.UserId,
-		channel: req.ChannelId,
 	}
 
 	return block.PlainText{
@@ -220,18 +213,14 @@ func (h handler) HandleViewClosed(ctx server.Context, viewClosed *server.ViewClo
 }
 
 func (h handler) HandleViewSubmission(ctx server.Context, viewSubmission *server.ViewSubmission) error {
-	viewId, _ := viewSubmission.View["id"].(string)
-	vctx, ok := h.views[viewId]
-	if !ok {
-		return fmt.Errorf("failed to get view '%s'", viewId)
-	}
-
+	channel := string(viewSubmission.View.GetPrivateMetadata())
 	title, _ := viewSubmission.State.GetValue("input_title")
 	content, _ := viewSubmission.State.GetValue("input_content")
 
-	msg := fmt.Sprintf("%s: %v", title, content)
+	msg := fmt.Sprintf("(%s) %s: %v", channel, title, content)
+	fmt.Println(msg)
 
-	if _, err := h.slack.PostMessage(vctx.channel, &api.ChatMessage{
+	if _, err := h.slack.PostMessage(channel, &api.ChatMessage{
 		Text: msg,
 		Blocks: []block.Block{
 			block.Section{

@@ -1,6 +1,7 @@
 package api
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -8,7 +9,10 @@ import (
 	"reflect"
 
 	"github.com/scryner/util.slack/block"
+	"github.com/scryner/util.slack/internal/crypto"
 )
+
+type PrivateMetadata []byte
 
 type View struct {
 	Type            string           `json:"type"`
@@ -16,12 +20,23 @@ type View struct {
 	Blocks          []block.Block    `json:"blocks"`
 	Close           *block.PlainText `json:"close,omitempty"`
 	Submit          *block.PlainText `json:"submit,omitempty"`
-	PrivateMetadata string           `json:"private_metadata,omitempty"`
-	CallbackId      string            `json:"callback_id,omitempty"`
-	ClearOnClose    *bool             `json:"clear_on_close,omitempty"`
-	NotifyOnClose   *bool             `json:"notify_on_close,omitempty"`
-	ExternalId      string            `json:"external_id,omitempty"`
-	SubmitDisabled  *bool             `json:"submit_disabled,omitempty"`
+	PrivateMetadata PrivateMetadata  `json:"private_metadata,omitempty"`
+	CallbackId      string           `json:"callback_id,omitempty"`
+	ClearOnClose    *bool            `json:"clear_on_close,omitempty"`
+	NotifyOnClose   *bool            `json:"notify_on_close,omitempty"`
+	ExternalId      string           `json:"external_id,omitempty"`
+	SubmitDisabled  *bool            `json:"submit_disabled,omitempty"`
+}
+
+func (data PrivateMetadata) MarshalJSON() ([]byte, error) {
+	// encrypt
+	encrypted, err := crypto.Encrypt(data)
+	if err != nil {
+		return nil, err
+	}
+
+	// base64 encoding
+	return json.Marshal(base64.StdEncoding.EncodeToString(encrypted))
 }
 
 type genericResponse struct {
