@@ -11,12 +11,17 @@ type Button struct {
 }
 
 func (btn Button) MarshalJSON() ([]byte, error) {
-	return json.Marshal(map[string]interface{}{
-		"type":      "button",
-		"text":      btn.Text,
-		"value":     btn.Value,
-		"action_id": btn.ActionId,
-	})
+	m := map[string]interface{}{
+		"type":  "button",
+		"text":  btn.Text,
+		"value": btn.Value,
+	}
+
+	if btn.ActionId != "" {
+		m["action_id"] = btn.ActionId
+	}
+
+	return json.Marshal(m)
 }
 
 func (Button) actionsElementAble()   {}
