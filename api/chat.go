@@ -78,7 +78,7 @@ type ChatMessage struct {
 }
 
 type postChatMessageRequest struct {
-	ChannelID string `json:"channel"`
+	ChannelId string `json:"channel"`
 	*ChatMessage
 }
 
@@ -111,7 +111,7 @@ func (api *API) PostBotDirectMessage(user *User, msg *ChatMessage) (channelId, t
 func (api *API) PostMessage(channelId string, msg *ChatMessage) (string, error) {
 	// post message
 	resp, err := api.doHTTPPostJSON("api/chat.postMessage", nil, postChatMessageRequest{
-		ChannelID:   channelId,
+		ChannelId:   channelId,
 		ChatMessage: msg,
 	})
 
@@ -146,6 +146,52 @@ func (api *API) PostMessage(channelId string, msg *ChatMessage) (string, error) 
 
 	// return result
 	return postMsgResp.Timestamp, nil
+}
+
+type postEphemeralMessageRequest struct {
+	ChannelId string `json:"channel"`
+	UserId    string `json:"user"`
+	*ChatMessage
+}
+
+func (api *API) PostEphemeralMessage(channelId, userId string, msg *ChatMessage) error {
+	// post ephemeral message
+	resp, err := api.doHTTPPostJSON("api/chat.postEphemeral", nil, postEphemeralMessageRequest{
+		ChannelId:   channelId,
+		UserId:      userId,
+		ChatMessage: msg,
+	})
+
+	if err != nil {
+		return fmt.Errorf("failed to send request to post ephemeral message: %v", err)
+	}
+
+	defer resp.Body.Close()
+
+	// check result
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("failed to post ephemeral message: status = %s", resp.Status)
+	}
+
+	// read response body
+	b, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return fmt.Errorf("failed to read response body: %v", err)
+	}
+
+	// unmarshal response
+	var gResp genericResponse
+
+	err = json.Unmarshal(b, &gResp)
+	if err != nil {
+		return fmt.Errorf("failed to unmarshal response body: %v", err)
+	}
+
+	if !gResp.OK {
+		return fmt.Errorf("failed to post ephemeral message: %s", gResp.Error)
+	}
+
+	return nil
 }
 
 type deleteMessageRequest struct {

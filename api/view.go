@@ -120,7 +120,6 @@ func (api *API) OpenView(triggerId string, view *View) (viewId string, err error
 
 	// do request
 	resp, err := api.doHTTPPostJSON("api/views.open", nil, req)
-
 	if err != nil {
 		return "", fmt.Errorf("failed to send request to open view: %v", err)
 	}
@@ -164,4 +163,57 @@ func (api *API) OpenView(triggerId string, view *View) (viewId string, err error
 	}
 
 	return
+}
+
+type updateViewRequest struct {
+	ViewId string `json:"view_id"`
+	Hash   string `json:"hash,omitempty"`
+	View   *View  `json:"view"`
+}
+
+type updateViewResponse struct {
+	View map[string]interface{} `json:"view"`
+	genericResponse
+}
+
+func (api *API) UpdateView(viewId, hash string, view *View) error {
+	req := updateViewRequest{
+		ViewId: viewId,
+		Hash:   hash,
+		View:   view,
+	}
+
+	// do request
+	resp, err := api.doHTTPPostJSON("api/views.update", nil, req)
+	if err != nil {
+		return fmt.Errorf("failed to send request to update view: %v", err)
+	}
+
+	defer resp.Body.Close()
+
+	// check result
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("failed to update view: status = %s", resp.Status)
+	}
+
+	// read response body
+	b, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return fmt.Errorf("failed to response body: %v", err)
+	}
+
+	// unmarshal generic response
+	var vResp updateViewResponse
+
+	err = json.Unmarshal(b, &vResp)
+	if err != nil {
+		// never reached
+		return fmt.Errorf("failed to unmarshal response body: %v", err)
+	}
+
+	if !vResp.OK {
+		return fmt.Errorf("failed to update view: %s", vResp.Error)
+	}
+
+	return nil
 }

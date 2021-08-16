@@ -220,18 +220,14 @@ func (h handler) HandleViewSubmission(ctx server.Context, viewSubmission *server
 	msg := fmt.Sprintf("(%s) %s: %v", channel, title, content)
 	fmt.Println(msg)
 
-	if _, err := h.slack.PostMessage(channel, &api.ChatMessage{
+	return h.slack.PostEphemeralMessage(channel, viewSubmission.User.Id, &api.ChatMessage{
 		Text: msg,
-		Blocks: []block.Block{
+		Blocks: block.Blocks{
 			block.Section{
-				Text: block.MarkdownText{
+				Text: block.PlainText{
 					Text: msg,
 				},
 			},
 		},
-	}); err != nil {
-		return err
-	}
-
-	return nil
+	})
 }
