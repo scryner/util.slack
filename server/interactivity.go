@@ -1,13 +1,12 @@
 package server
 
 import (
-	"encoding/base64"
 	"encoding/json"
 	"net/http"
 	"net/url"
 
 	"github.com/labstack/echo/v4"
-	"github.com/scryner/util.slack/internal/crypto"
+	"github.com/scryner/util.slack/secret"
 )
 
 type User struct {
@@ -132,25 +131,8 @@ func (v View) Id() string {
 
 func (v View) GetPrivateMetadata() []byte {
 	// extract view.private_metadata
-	data := safeToString(v["private_metadata"])
-
-	if data != "" {
-		// base64 decoding
-		ciphertext, err := base64.StdEncoding.DecodeString(data)
-		if err != nil {
-			return nil
-		}
-
-		// decrypt
-		decrypted, err := crypto.Decrypt([]byte(ciphertext))
-		if err != nil {
-			return nil
-		}
-
-		return decrypted
-	}
-
-	return nil
+	decoded, _ :=  secret.Decode(safeToString(v["private_metadata"]))
+	return decoded
 }
 
 type viewValue struct {

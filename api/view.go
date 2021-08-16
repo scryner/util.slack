@@ -1,7 +1,6 @@
 package api
 
 import (
-	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -9,7 +8,7 @@ import (
 	"reflect"
 
 	"github.com/scryner/util.slack/block"
-	"github.com/scryner/util.slack/internal/crypto"
+	"github.com/scryner/util.slack/secret"
 )
 
 type PrivateMetadata []byte
@@ -29,14 +28,13 @@ type View struct {
 }
 
 func (data PrivateMetadata) MarshalJSON() ([]byte, error) {
-	// encrypt
-	encrypted, err := crypto.Encrypt(data)
+	encoded, err := secret.Encode(data)
 	if err != nil {
 		return nil, err
 	}
 
 	// base64 encoding
-	return json.Marshal(base64.StdEncoding.EncodeToString(encrypted))
+	return json.Marshal(encoded)
 }
 
 type genericResponse struct {
