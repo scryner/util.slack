@@ -97,6 +97,9 @@ func (h handler) HandleCommand(ctx server.Context, req *server.SlashCommandReque
 				},
 				Element: block.PlainTextInput{
 					ActionId: "input_title",
+					PlaceHolder: block.PlainText{
+						Text:  "Hello!",
+					},
 				},
 			},
 			block.Input{

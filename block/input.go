@@ -27,8 +27,9 @@ type InputElement interface {
 }
 
 type PlainTextInput struct {
-	Multiline bool
-	ActionId  string
+	Multiline   bool
+	ActionId    string
+	PlaceHolder PlainText
 }
 
 func (p PlainTextInput) MarshalJSON() ([]byte, error) {
@@ -36,6 +37,10 @@ func (p PlainTextInput) MarshalJSON() ([]byte, error) {
 		"type":      "plain_text_input",
 		"multiline": p.Multiline,
 		"action_id": p.ActionId,
+	}
+
+	if p.PlaceHolder.Text != "" {
+		m["placeholder"] = p.PlaceHolder
 	}
 
 	return json.Marshal(m)
