@@ -3,7 +3,6 @@ package server
 import (
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"strconv"
 
@@ -38,7 +37,7 @@ type Server struct {
 	middlewares   []echo.MiddlewareFunc
 }
 
-type handler func() (string, echo.HandlerFunc)
+type handler func() (method, path string, handlerFunc echo.HandlerFunc, isForSlack bool)
 
 type Option func(*Server) error
 
@@ -114,32 +113,6 @@ func (server *Server) StartServer() <-chan error {
 		// make verifier
 		verifier := NewVerifier(server.signingSecret)
 
-		// register verifier middleware
-		e.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
-			return func(ctx echo.Context) error {
-				// verify token
-				reqTimestamp := fromHeaderAsInt64(ctx.Request().Header, "X-Slack-Request-Timestamp")
-				reqSignature := ctx.Request().Header.Get("X-Slack-Signature")
-
-				reqBody, err := ioutil.ReadAll(ctx.Request().Body)
-				if err != nil {
-					ctx.Logger().Errorf("failed to read request body: %v", err)
-					return echo.ErrBadRequest
-				}
-
-				ctx.Set("reqBody", reqBody)
-
-				err = verifier.Verify(reqTimestamp, reqSignature, string(reqBody))
-				if err != nil {
-					ctx.Logger().Errorf("failed to verify request: %v", err)
-					return echo.ErrForbidden
-				}
-
-				// verified
-				return next(ctx)
-			}
-		})
-
 		// register other middlewares
 		if len(server.middlewares) > 1 {
 			e.Use(server.middlewares...)
@@ -147,7 +120,36 @@ func (server *Server) StartServer() <-chan error {
 
 		// register handlers
 		for _, h := range server.handlers {
-			e.POST(h())
+			method, path, handlerFunc, isForSlack := h()
+
+			var handlerMiddlewares []echo.MiddlewareFunc
+			if isForSlack {
+				handlerMiddlewares = []echo.MiddlewareFunc{verifier.Middleware()}
+			}
+
+			switch method {
+			case http.MethodPost:
+				e.POST(path, handlerFunc, handlerMiddlewares...)
+			case http.MethodGet:
+				e.GET(path, handlerFunc, handlerMiddlewares...)
+			case http.MethodPut:
+				e.PUT(path, handlerFunc, handlerMiddlewares...)
+			case http.MethodHead:
+				e.HEAD(path, handlerFunc, handlerMiddlewares...)
+			case http.MethodConnect:
+				e.CONNECT(path, handlerFunc, handlerMiddlewares...)
+			case http.MethodDelete:
+				e.DELETE(path, handlerFunc, handlerMiddlewares...)
+			case http.MethodOptions:
+				e.OPTIONS(path, handlerFunc, handlerMiddlewares...)
+			case http.MethodPatch:
+				e.PATCH(path, handlerFunc, handlerMiddlewares...)
+			case http.MethodTrace:
+				e.TRACE(path, handlerFunc, handlerMiddlewares...)
+			default:
+				errCh <- fmt.Errorf("unknwon method '%s'", method)
+				return
+			}
 		}
 
 		errCh <- e.Start(fmt.Sprintf(":%d", server.listenPort))

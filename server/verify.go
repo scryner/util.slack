@@ -5,7 +5,10 @@ import (
 	"crypto/sha256"
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"time"
+
+	"github.com/labstack/echo/v4"
 )
 
 // Verifier verifies whether request was came from Slack
@@ -45,6 +48,33 @@ func (v *Verifier) Verify(timestamp int64, reqSignature, reqBody string) error {
 	}
 
 	return nil
+}
+
+func (v *Verifier) Middleware() echo.MiddlewareFunc {
+	return func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(ctx echo.Context) error {
+			// verify token
+			reqTimestamp := fromHeaderAsInt64(ctx.Request().Header, "X-Slack-Request-Timestamp")
+			reqSignature := ctx.Request().Header.Get("X-Slack-Signature")
+
+			reqBody, err := ioutil.ReadAll(ctx.Request().Body)
+			if err != nil {
+				ctx.Logger().Errorf("failed to read request body: %v", err)
+				return echo.ErrBadRequest
+			}
+
+			ctx.Set("reqBody", reqBody)
+
+			err = v.Verify(reqTimestamp, reqSignature, string(reqBody))
+			if err != nil {
+				ctx.Logger().Errorf("failed to verify request: %v", err)
+				return echo.ErrForbidden
+			}
+
+			// verified
+			return next(ctx)
+		}
+	}
 }
 
 // NewVerifier to create verifier

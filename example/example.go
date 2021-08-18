@@ -3,10 +3,13 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"log"
+	"net/http"
 	"os"
 	"time"
 
+	"github.com/labstack/echo/v4"
 	"github.com/scryner/util.slack/api"
 	"github.com/scryner/util.slack/block"
 	"github.com/scryner/util.slack/server"
@@ -52,6 +55,19 @@ func main() {
 			server.SlashCommand("/slash", h),
 			server.EventSubscriptions("/event", h),
 			server.Interactivity("/interactivity", h),
+			server.Http(http.MethodPost, "/echo", func(ctx echo.Context) error {
+				// read body
+				b, err := ioutil.ReadAll(ctx.Request().Body)
+				if err != nil {
+					return ctx.String(http.StatusBadRequest, "can't read request body")
+				}
+
+				if len(b) < 1 {
+					return ctx.String(http.StatusBadRequest, "empty request body")
+				}
+
+				return ctx.String(http.StatusOK, string(b))
+			}),
 		),
 	)
 

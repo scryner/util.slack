@@ -138,8 +138,8 @@ type EventHandler interface {
 }
 
 func EventSubscriptions(endpoint string, handler EventHandler) handler {
-	return func() (path string, handlerFunc echo.HandlerFunc) {
-		return endpoint, func(ctx echo.Context) error {
+	return func() (string, string, echo.HandlerFunc, bool) {
+		return http.MethodPost, endpoint, func(ctx echo.Context) error {
 			// get request body
 			reqBody, ok := ctx.Get("reqBody").([]byte)
 			if !ok {
@@ -202,7 +202,7 @@ func EventSubscriptions(endpoint string, handler EventHandler) handler {
 				ctx.Logger().Errorf("unhandled event type '%s'", typ)
 				return ctx.NoContent(http.StatusOK)
 			}
-		}
+		}, true
 	}
 }
 

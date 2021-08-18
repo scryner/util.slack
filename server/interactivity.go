@@ -131,7 +131,7 @@ func (v View) Id() string {
 
 func (v View) GetPrivateMetadata() []byte {
 	// extract view.private_metadata
-	decoded, _ :=  secret.Decode(safeToString(v["private_metadata"]))
+	decoded, _ := secret.Decode(safeToString(v["private_metadata"]))
 	return decoded
 }
 
@@ -203,8 +203,8 @@ type InteractivityHandler interface {
 }
 
 func Interactivity(endpoint string, handler InteractivityHandler) handler {
-	return func() (string, echo.HandlerFunc) {
-		return endpoint, func(ctx echo.Context) error {
+	return func() (string, string, echo.HandlerFunc, bool) {
+		return http.MethodPost, endpoint, func(ctx echo.Context) error {
 			// get request body
 			reqBody, ok := ctx.Get("reqBody").([]byte)
 			if !ok {
@@ -357,6 +357,6 @@ func Interactivity(endpoint string, handler InteractivityHandler) handler {
 			}
 
 			return nil
-		}
+		}, true
 	}
 }

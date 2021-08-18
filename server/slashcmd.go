@@ -29,8 +29,8 @@ type SlashCommandHandler interface {
 }
 
 func SlashCommand(endpoint string, cmdHandler SlashCommandHandler) handler {
-	return func() (path string, handlerFunc echo.HandlerFunc) {
-		return endpoint, func(ctx echo.Context) error {
+	return func() (string, string, echo.HandlerFunc, bool) {
+		return http.MethodPost, endpoint, func(ctx echo.Context) error {
 			// get request body
 			_reqBody := ctx.Get("reqBody")
 			reqBody, ok := _reqBody.([]byte)
@@ -78,6 +78,6 @@ func SlashCommand(endpoint string, cmdHandler SlashCommandHandler) handler {
 			}
 
 			return ctx.JSON(http.StatusOK, msg)
-		}
+		}, true
 	}
 }
