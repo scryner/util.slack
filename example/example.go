@@ -25,6 +25,23 @@ func main() {
 		log.Fatal("failed to make api:", err)
 	}
 
+	// private download
+	privUrl := "https://files.slack.com/files-pri/THABEEB7X-F02CPK10NDN/download/_______________________________2021-08-23______________4.46.00.png"
+	body, err := slack.PrivateDownload(privUrl)
+	if err != nil {
+		log.Fatal("failed to private download:", err)
+	}
+
+	func() {
+		defer body.Close()
+		b, err := ioutil.ReadAll(body)
+		if err != nil {
+			log.Fatal("failed to read download body:", err)
+		}
+
+		fmt.Println("download length:", len(b))
+	}()
+
 	// search user
 	user, err := slack.SearchUserByEmail("scryner@42dot.ai")
 	if err != nil {

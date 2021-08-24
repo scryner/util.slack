@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 	"time"
@@ -12,9 +13,9 @@ import (
 )
 
 const (
-	defaultServerAddr     = "https://slack.com"
-	defaultLruCacheCapacity  = 2048
-	defaultRequestTimeout = time.Second * 10
+	defaultServerAddr       = "https://slack.com"
+	defaultLruCacheCapacity = 2048
+	defaultRequestTimeout   = time.Second * 10
 )
 
 type API struct {
@@ -144,4 +145,23 @@ func (api *API) doHTTPPostJSON(apiPath string, params url.Values, v interface{})
 	req.Header.Set("Content-Type", "application/json; charset=utf-8")
 
 	return api.httpCli.Do(req)
+}
+
+func (api *API) PrivateDownload(url string) (io.ReadCloser, error) {
+	req, err := http.NewRequest(http.MethodGet, url, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to make request: %v", err)
+	}
+
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", api.botAccessToken))
+	resp, err := api.httpCli.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to do private download to '%s': %v", url, err)
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("failed to do private download to '%s': %d(%s)", url, resp.StatusCode, resp.Status)
+	}
+
+	return resp.Body, nil
 }
