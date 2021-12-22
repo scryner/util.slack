@@ -27,20 +27,27 @@ type InputElement interface {
 }
 
 type PlainTextInput struct {
-	Multiline   bool
-	ActionId    string
-	PlaceHolder PlainText
+	Multiline    bool
+	ActionId     string
+	PlaceHolder  PlainText
+	InitialValue string
+	FocusOnLoad  bool
 }
 
 func (p PlainTextInput) MarshalJSON() ([]byte, error) {
 	m := map[string]interface{}{
-		"type":      "plain_text_input",
-		"multiline": p.Multiline,
-		"action_id": p.ActionId,
+		"type":          "plain_text_input",
+		"multiline":     p.Multiline,
+		"action_id":     p.ActionId,
+		"focus_on_load": p.FocusOnLoad,
 	}
 
 	if p.PlaceHolder.Text != "" {
 		m["placeholder"] = p.PlaceHolder
+	}
+
+	if p.InitialValue != "" {
+		m["initial_value"] = p.InitialValue
 	}
 
 	return json.Marshal(m)
