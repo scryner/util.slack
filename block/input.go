@@ -53,4 +53,28 @@ func (p PlainTextInput) MarshalJSON() ([]byte, error) {
 	return json.Marshal(m)
 }
 
-func (p PlainTextInput) inputElementAble() {}
+func (PlainTextInput) inputElementAble() {}
+
+type SelectOption struct {
+	Text  PlainText `json:"text"`
+	Value string    `json:"value"`
+}
+
+type StaticSelect struct {
+	Placeholder PlainText
+	Options     []SelectOption
+	ActionId    string
+}
+
+func (s StaticSelect) MarshalJSON() ([]byte, error) {
+	m := map[string]interface{}{
+		"type":        "static_select",
+		"placeholder": s.Placeholder,
+		"options":     s.Options,
+		"action_id":   s.ActionId,
+	}
+
+	return json.Marshal(m)
+}
+
+func (StaticSelect) inputElementAble() {}
