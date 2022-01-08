@@ -31,6 +31,8 @@ type PlainTextInput struct {
 	ActionId     string
 	PlaceHolder  PlainText
 	InitialValue string
+	MinLength    int
+	MaxLength    int
 	FocusOnLoad  bool
 }
 
@@ -48,6 +50,14 @@ func (p PlainTextInput) MarshalJSON() ([]byte, error) {
 
 	if p.InitialValue != "" {
 		m["initial_value"] = p.InitialValue
+	}
+
+	if p.MinLength > 0 {
+		m["min_length"] = p.MinLength
+	}
+
+	if p.MaxLength > 0 {
+		m["max_length"] = p.MaxLength
 	}
 
 	return json.Marshal(m)
