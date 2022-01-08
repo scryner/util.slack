@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"reflect"
+	"strings"
 
 	"github.com/scryner/util.slack/block"
 	"github.com/scryner/util.slack/secret"
@@ -37,9 +38,14 @@ func (data PrivateMetadata) MarshalJSON() ([]byte, error) {
 	return json.Marshal(encoded)
 }
 
+type responseMetadata struct {
+	Messages []string `json:"messages"`
+}
+
 type genericResponse struct {
-	OK    bool   `json:"ok"`
-	Error string `json:"error"`
+	OK               bool             `json:"ok"`
+	Error            string           `json:"error"`
+	ResponseMetadata responseMetadata `json:"response_metadata"`
 }
 
 func (api *API) PublishHomeView(user *User, blocks []block.Block) error {
@@ -145,7 +151,16 @@ func (api *API) OpenView(triggerId string, view *View) (viewId string, err error
 	}
 
 	if !vResp.OK {
-		return "", fmt.Errorf("failed to open view: %s", vResp.Error)
+		var errMsg string
+
+		// try to get detailed error response
+		if len(vResp.ResponseMetadata.Messages) > 0 {
+			errMsg = fmt.Sprintf("%s (%s)", vResp.Error, strings.Join(vResp.ResponseMetadata.Messages, ", "))
+		} else {
+			errMsg = vResp.Error
+		}
+
+		return "", fmt.Errorf("failed to open view: %s", errMsg)
 	}
 
 	// extract id
